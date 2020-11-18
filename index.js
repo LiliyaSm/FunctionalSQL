@@ -47,6 +47,7 @@ var persons = [
 var numbers = [1, 2, 3];
 
 var query = function () {
+
     this.selectFunction = null;
     this.res = [];
     this.filterFunctions = [];
@@ -97,7 +98,7 @@ var query = function () {
         }
 
         // groupBy call
-        if (this.groupFunctions.length > 0) {
+        if (this.groupFunctions) {
             // let res = [[[]], [clause2, []]];
             let arr = [];
             let arr2 = [];
@@ -127,11 +128,23 @@ var query = function () {
                         }
                     }
                 });
-                this.res = res;
+                return res;
             }
 
-            for (func of this.groupFunctions) {
-                groupArray(func, this.res);
+            debugger;
+            for (let func of this.groupFunctions) {
+                 let fl = false;
+
+                for (let el of this.res){
+                    if (Array.isArray(el))
+                    {   fl = true;
+                        el[1] = groupArray(func, el[1]);
+                    }
+                }
+
+                if(!fl){
+                    this.res = groupArray(func, this.res);
+                }
             }
         }
 
@@ -152,7 +165,14 @@ function profession(person) {
 function isEven(number) {
     return number % 2 === 0;
 }
-
+function isPrime(number) {
+    if (number < 2) {
+        return false;
+    }
+    var divisor = 2;
+    for (; number % divisor !== 0; divisor++);
+    return divisor === number;
+}
 function parity(number) {
     return isEven(number) ? "even" : "odd";
 }
@@ -174,10 +194,11 @@ function prime(number) {
 // console.log(query().select().from(numbers).execute()); //[1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 //SELECT * FROM numbers GROUP BY parity
-console.log(query().select().from(numbers).groupBy(parity).execute()); //[["odd",[1,3,5,7,9]],["even",[2,4,6,8]]]
+// console.log(query().select().from(numbers).groupBy(parity).execute()); //[["odd",[1,3,5,7,9]],["even",[2,4,6,8]]]
 // console.log(query().select().from(numbers).execute()); ///??????????????????????????????????
 
-// query().select().from(numbers).groupBy(parity, prime).execute(),
+console.log(query().select().from(numbers).groupBy(parity, prime).execute());
+
     [
         [
             "odd",
