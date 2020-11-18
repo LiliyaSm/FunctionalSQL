@@ -49,48 +49,67 @@ var numbers = [1, 2, 3];
 var query = function () {
     this.selectFunction = null;
     this.res = [];
+    this.filterFunctions = [];
 
     this.select = function (...args) {
         // take function
-        this.selectFunction = args[0];
+        if (args[0]) {
+            this.selectFunction = args[0];
+        } else {
+            this.selectFunction = (...args) => {
+                return args[0];
+            };
+        }
         return this;
     };
 
     this.from = function (...args) {
-        args[0].forEach((el) => {
-            this.res.push(this.selectFunction.call(null, el));
-        });
+        this.res = args[0];
+
+        return this;
+    };
+
+    this.where = function (...args) {
+        this.filterFunctions.push(args[0]);
 
         return this;
     };
 
     this.execute = function (...args) {
+        //where call
+
+        for (func of this.filterFunctions) {
+            let res = this.res.filter(   func);
+            this.res = res;
+        }
+
+        // call select
+        if (this.selectFunction) {
+            let res= [];
+            this.res.forEach((el) => {
+                res.push(this.selectFunction.call(null, el));
+            });
+            this.res = res;        
+        } 
+
         return this.res;
     };
 
     return this;
 };
 
-query.prototype = {
-    select: function (...args) {
-        // take function
-        this.selectFunction = args[0];
-        return this;
-    },
-
-    from: function (...args) {
-        this.res = this.selectFunction.apply(this, args);
-        return this;
-    },
-
-    execute: function (...args) {
-        return this.res;
-    },
-};
+function isTeacher(person) {
+    return person.profession === "teacher";
+}
 
 function profession(person) {
     return person.profession;
 }
 
 // query().select().from(numbers).execute(); //[1, 2, 3]
-console.log(query().select(profession).from(persons).execute());
+// console.log(query().select(profession).from(persons).execute());
+// console.log(
+//     query().select(profession).from(persons).where(isTeacher).execute()
+// );
+
+console.log(query().from(numbers).execute());
